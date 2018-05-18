@@ -1,12 +1,43 @@
 'use strict';
 
 const express = require('express');
-const mongoose = require('mongoose');
+const {MongoClient} = require('mongodb');
 const request = require('request');
+const assert = require('assert');
+const url = 'mongodb://mongo:27017';
 
-//DB setup
-mongoose.connect("mongodb://mongo:27017");
+// Database Name
+const dbName = 'ticks';
 
+// Use connect method to connect to the server
+
+const insertDocuments = function(records, callback) {
+    // Get the documents collection
+    MongoClient.connect(url, function(err, client) {
+        assert.equal(err, null);
+        console.log("Connected successfully to server");
+
+        const db = client.db(dbName);
+        const collection = db.collection('tickets');
+        let utcDate = new Date();
+        utcDate.setUTCHours(0, 0, 0, 0);
+        // Insert some documents
+        const entry = {
+            date: utcDate.toISOString(),
+            tickets: records
+        };
+        collection.insert(entry, function(err, result) {
+            assert.equal(err, null);
+            // assert.equal(entry.tickets.length, result.result.tickets.n);
+            // assert.equal(entry.length, result.ops.length);
+            console.log(`Inserted ${entry.length} documents into the collection`);
+            callback(result);
+            client.close();
+        });
+
+    });
+
+}
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
@@ -15,6 +46,7 @@ const HOST = '0.0.0.0';
 const app = express();
 app.get('/tickets', (req, res) => {
     getTickets().then((tickets) => {
+        insertDocuments(tickets, () => console.log('inserted successfully'));
         res.send(tickets);
     }).catch((error) => {
         console.log(error);
