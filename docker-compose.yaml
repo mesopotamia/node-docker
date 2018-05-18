@@ -9,6 +9,11 @@ services:
       - "3000:8080"
     links:
       - mongo
+    environment:
+        TZ: "America/Toronto"
+        command: >
+          sh -c "ln -snf /usr/share/zoneinfo/$TZ /etc/localtime &&
+          echo $TZ > /etc/timezone"
   mongo:
     image: mongo
     volumes:

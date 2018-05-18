@@ -42,9 +42,9 @@ const HOST = '0.0.0.0';
 
 // App
 const app = express();
-app.post('/saveTickets', (req, res) => {
+app.post('/saveUEFATickets', (req, res) => {
     const url = `https://intl.stubhub.com/events/407914/tickets?lastminute=false&buyRedirect
-    =false&category=sports&ts=1526042608631&showall=1`
+    =false&category=sports&ts=1526042608631&showall=1`;
     getTickets(url).then((tickets) => {
         insertDocuments('tickets', tickets, () => res.send('inserted successfully'));
     }).catch((error) => {
