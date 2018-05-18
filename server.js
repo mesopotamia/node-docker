@@ -7,18 +7,16 @@ const assert = require('assert');
 const url = 'mongodb://mongo:27017';
 
 // Database Name
-const dbName = 'ticks';
+const DB_NAME = 'ticks';
 
-// Use connect method to connect to the server
-
-const insertDocuments = function(records, callback) {
+const insertDocuments = function(collectionName = 'tickets', records, callback) {
     // Get the documents collection
     MongoClient.connect(url, function(err, client) {
         assert.equal(err, null);
         console.log("Connected successfully to server");
 
-        const db = client.db(dbName);
-        const collection = db.collection('tickets');
+        const db = client.db(DB_NAME);
+        const collection = db.collection(collectionName);
         let utcDate = new Date();
         utcDate.setUTCHours(0, 0, 0, 0);
         // Insert some documents
@@ -37,18 +35,30 @@ const insertDocuments = function(records, callback) {
 
     });
 
-}
+};
 // Constants
 const PORT = 8080;
 const HOST = '0.0.0.0';
 
 // App
 const app = express();
-app.get('/tickets', (req, res) => {
-    getTickets().then((tickets) => {
-        insertDocuments(tickets, () => console.log('inserted successfully'));
-        res.send(tickets);
+app.post('/saveTickets', (req, res) => {
+    const url = `https://intl.stubhub.com/events/407914/tickets?lastminute=false&buyRedirect
+    =false&category=sports&ts=1526042608631&showall=1`
+    getTickets(url).then((tickets) => {
+        insertDocuments('tickets', tickets, () => res.send('inserted successfully'));
     }).catch((error) => {
+        res.send('unsuccessful save');
+        console.log(error);
+    })
+});
+app.post('/saveWorldCupTickets', (req, res) => {
+    const url = `https://intl.stubhub.com/events/357174/tickets?lastminute=false
+        &buyRedirect=false&category=sports&ts=1526594098710&showall=1`;
+    getTickets(url).then((tickets) => {
+        insertDocuments('worldCupTickets', tickets, () => res.send('inserted successfully'));
+    }).catch((error) => {
+        res.send('unsuccessful save');
         console.log(error);
     })
 });
@@ -90,12 +100,11 @@ app.get('/averagePrice', (req, res) => {
         res.send(averagePrice);
     });
 });
-const getTickets = () => {
-    const stubhubUrl = `https://intl.stubhub.com/events/407914/tickets?lastminute=false&buyRedirect
-    =false&category=sports&ts=1526042608631&showall=1`;
+const getTickets = (url) => {
 
+    assert(url, null);
     return new Promise((resolve, reject) => {
-        request(stubhubUrl, (error, response, body) => {
+        request(url, (error, response, body) => {
             if (error) {
                 reject(error);
             }
