@@ -1,5 +1,6 @@
 'use strict';
 
+const moment = require('moment');
 const express = require('express');
 const {MongoClient} = require('mongodb');
 const request = require('request');
@@ -17,11 +18,9 @@ const insertDocuments = function(collectionName = 'tickets', records, callback) 
 
         const db = client.db(DB_NAME);
         const collection = db.collection(collectionName);
-        let utcDate = new Date();
-        utcDate.setUTCHours(0, 0, 0, 0);
         // Insert some documents
         const entry = {
-            date: utcDate.toISOString(),
+            date: moment().format(),
             tickets: records
         };
         collection.insert(entry, function(err, result) {
